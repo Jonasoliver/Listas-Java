@@ -1,36 +1,53 @@
 package com.autobots.automanager.controles;
 
-
 import com.autobots.automanager.entidades.Endereco;
-import com.autobots.automanager.repositorios.EnderecoRepositorio;
+import com.autobots.automanager.entidades.Cliente;
+import com.autobots.automanager.repositorios.ClienteRepositorio;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
-@RequestMapping("/endereco")
+@RequestMapping("/cliente/{clienteId}/endereco")
 public class EnderecoControle {
     @Autowired
-    private EnderecoRepositorio repositorio;
+    private ClienteRepositorio repositorio;
 
-    @GetMapping("/{id}")
-    public Endereco obterEndereco(@PathVariable Long id) {
-        return  repositorio.findById(id).orElse(null);
+    @PostMapping("/adicionar")
+    public void adicionarEndereco(@PathVariable long clienteId, @RequestBody Endereco endereco) {
+        Cliente cliente = repositorio.findById(clienteId).orElse(null);
+        if (cliente != null) {
+            cliente.setEndereco(endereco);
+            repositorio.save(cliente);
+        }
     }
 
-    @GetMapping
-    public List<Endereco> obterEnderecos(){
-        return repositorio.findAll();
+    @PutMapping("/atualizar/{enderecoId}")
+    public void atualizarEndereco(@PathVariable long clienteId, @PathVariable long enderecoId, @RequestBody Endereco enderecoAtualizado) {
+        Cliente cliente = repositorio.findById(clienteId).orElse(null);
+        if (cliente != null) {
+            Endereco endereco = cliente.getEndereco();
+            if (endereco != null && endereco.getId().equals(enderecoId)) {
+                endereco.setEstado(enderecoAtualizado.getEstado());
+                endereco.setNumero(enderecoAtualizado.getNumero());
+                endereco.setCidade(enderecoAtualizado.getCidade());
+                endereco.setBairro(enderecoAtualizado.getBairro());
+                endereco.setRua(enderecoAtualizado.getRua());
+                endereco.setInformacoesAdicionais(enderecoAtualizado.getInformacoesAdicionais());
+                endereco.setCodigoPostal(enderecoAtualizado.getCodigoPostal());
+                repositorio.save(cliente);
+            }
+        }
     }
 
-    @PostMapping
-    public void cadastraEndereco(@RequestBody Endereco endereco) {
-        repositorio.save(endereco);
-    }
-
-    @DeleteMapping("/{id}")
-    public void deletaEndereco(@PathVariable Long id) {
-        repositorio.deleteById(id);
+    @DeleteMapping("/deletar/{enderecoId}")
+    public void deletarEndereco(@PathVariable long clienteId, @PathVariable long enderecoId) {
+        Cliente cliente = repositorio.findById(clienteId).orElse(null);
+        if (cliente != null) {
+            Endereco endereco = cliente.getEndereco();
+            if (endereco != null && endereco.getId().equals(enderecoId)) {
+                cliente.setEndereco(null);
+                repositorio.save(cliente);
+            }
+        }
     }
 }
