@@ -1,39 +1,47 @@
 package com.autobots.automanager.controles;
 
-
 import com.autobots.automanager.entidades.Documento;
-import com.autobots.automanager.repositorios.DocumentoRepositorio;
+import com.autobots.automanager.entidades.Cliente;
+import com.autobots.automanager.repositorios.ClienteRepositorio;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
-@RequestMapping("/documento")
+@RequestMapping("/cliente/{clienteId}/documento")
 public class DocumentoControle {
     @Autowired
-    private DocumentoRepositorio repositorio;
+    private ClienteRepositorio repositorio;
 
-    @GetMapping("/{id}")
-    public Documento obterDocumento(@PathVariable long id) {
-        return repositorio.findById(id).orElse(null);
-    }
-
-    @GetMapping
-    public List<Documento> obterDocumentos() {
-        return repositorio.findAll();
-    }
-    @PostMapping
-    public void cadastrarDocumento(@RequestBody Documento documento) {
-        repositorio.save(documento);
-    }
-    @PutMapping
-    public void atualizarDocumento(@RequestBody Documento documento) {
-        repositorio.save(documento);
+    @PostMapping("/adicionar")
+    public void adicionarDocumento(@PathVariable long clienteId, @RequestBody Documento documento) {
+        Cliente cliente = repositorio.findById(clienteId).orElse(null);
+        if (cliente != null) {
+            cliente.getDocumentos().add(documento);
+            repositorio.save(cliente);
+        }
     }
 
-    @DeleteMapping("{id}")
-    public void excluirDocumento(@PathVariable long id) {
-        repositorio.deleteById(id);
+    @PutMapping("/atualizar/{documentoId}")
+    public void atualizarDocumento(@PathVariable long clienteId, @PathVariable long documentoId, @RequestBody Documento documentoAtualizado) {
+        Cliente cliente = repositorio.findById(clienteId).orElse(null);
+        if (cliente != null) {
+            for (Documento documento : cliente.getDocumentos()) {
+                if (documento.getId().equals(documentoId)) {
+                    documento.setTipo(documentoAtualizado.getTipo());
+                    documento.setNumero(documentoAtualizado.getNumero());
+                    break;
+                }
+            }
+            repositorio.save(cliente);
+        }
+    }
+
+    @DeleteMapping("/deletar/{documentoId}")
+    public void deletarDocumento(@PathVariable long clienteId, @PathVariable long documentoId) {
+        Cliente cliente = repositorio.findById(clienteId).orElse(null);
+        if (cliente != null) {
+            cliente.getDocumentos().removeIf(documento -> documento.getId().equals(documentoId));
+            repositorio.save(cliente);
+        }
     }
 }
